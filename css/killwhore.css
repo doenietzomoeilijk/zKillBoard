@@ -1,0 +1,594 @@
+/* http://meyerweb.com/eric/tools/css/reset/ */
+/* v1.0 | 20080212 */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    vertical-align: top;
+    background: transparent;
+    font-family: Arial, Tahoma, Helvetica, sans-serif;
+}
+
+body {
+    line-height: 1;
+}
+
+ol, ul {
+    list-style: none;
+}
+
+blockquote, q {
+    quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+
+/* remember to define focus styles! */
+:focus {
+    outline: 0;
+}
+
+/* remember to highlight inserts somehow! */
+ins {
+    text-decoration: none;
+}
+
+del {
+    text-decoration: line-through;
+}
+
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+html, body {
+}
+
+body {
+    color: white;
+    background-color: black;
+    margin-left: auto;
+    margin-right: auto;
+
+    height: auto !important; /* real browsers */
+    height: 100%;
+    min-height: 100%; /* real browsers */
+}
+
+span {
+    display: inline-block;
+}
+
+.smallCorner {
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    padding: 5px;
+    border: solid 1px #999;
+    margin-right: 0.1em;
+    margin-left: 0.1em;
+}
+
+.largeCorner {
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+    padding: 15px;
+    border: solid 1px #999;
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+    padding-bottom: 0px;
+}
+
+.paddedBottom {
+    margin-bottom: 25px;
+}
+
+#content {
+    margin: auto;
+    height: 100%;
+    position: relative; /* needed for footer positioning*/
+    margin: 0 auto; /* center, not in IE5 */
+
+    height: auto !important; /* real browsers */
+    height: 100%; /* IE6: treated as min-height*/
+
+    min-height: 100%; /* real browsers */
+}
+
+#headerPane {
+    font-size: 300%;
+}
+
+#menu {
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+    padding-left: 0.5em;
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+    border-top: 3px #aaa double;
+    border-bottom: 3px #aaa double;
+}
+
+#menu a {
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+    font-weight: bold;
+}
+
+#leftPane {
+    width: 70px;
+    vertical-align: top;
+}
+
+#midPane {
+    width: 100%;
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+    margin-bottom: 25px;
+    border: solid 1px black;
+}
+
+#rightPane {
+    width: 70px;
+    vertical-align: top;
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: #fff;
+    color: black;
+    border-top: 3px #aaa double;
+    padding: 3px;
+    margin: 0px;
+}
+
+#footer a {
+    color: black;
+    text-decoration: underline;
+}
+
+#footerPadding {
+    border: 0px solid black;
+}
+
+body {
+    width: 1000px;
+}
+
+.footerContent {
+    padding-left: 0.5em;
+}
+
+#headerPane {
+    padding-top: 0.25em;
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: #bbb;
+}
+
+a:hover {
+    color: #800000;
+}
+
+.centerText {
+    text-align: center;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.infoSection {
+    margin: 1em;
+}
+
+.menuSpan {
+    width: 125px;
+    margin-bottom: 0.5em;
+    border: solid 1px #333;
+    word-wrap: break-word;
+}
+
+.menuSpan .title {
+    width: 100%;
+    text-align: center;
+    border-bottom: solid 1px #ccc;
+    margin-bottom: 0.3em;
+}
+
+.iconWithName {
+    width: 125px;
+    height: 150px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.iconWithName span {
+    width: 100%;
+
+}
+
+.imageWrapper {
+    float: left;
+    position: relative;
+}
+
+.destroyedImage {
+    /*background-image: url("/images/tinyRedX.png");*/
+    background-image: url("http://image.zzeve.com/Icons/items/16_16/icon38_111.png");
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    z-index: 1;
+    font-size: 1%;
+}
+
+.destroyedImage img {
+    position: relative;
+    z-index: -1;
+}
+
+/* Search results */
+.typeHeader {
+    width: 95%;
+    font-size: 200%;
+    font-weight: bold;
+    display: block;
+    margin-top: 0.3em;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: solid 4px #333;
+    text-align: center;
+}
+
+.typeHeaderSmall {
+    font-size: 100%;
+}
+
+.displayDate {
+    width: 85%;
+    text-align: center;
+    font-size: 150%;
+    border-bottom: 2px solid #333;
+    margin-top: 0.5em;
+    text-align: center;
+}
+
+.searchResults {
+    width: 100%;
+    text-align: center;
+}
+
+.killPanel {
+    width: 540px;
+    text-align: center;
+}
+
+.killPanel span {
+    float: left;
+}
+
+.killPanel img {
+    margin: 2px;
+}
+
+.searchResults .killPanel {
+    margin: 0.25em;
+}
+
+.searchResults .wreckImage {
+    margin-top: 8px;
+}
+
+.killmailLink {
+    width: 128px;
+    height: 32px;
+    font-weight: bold;
+}
+
+.killmailSystem, .killInfo, .killmailTime {
+    display: block;
+    width: 128px;
+}
+
+.noKills {
+    width: 100%;
+    font-weight: bold;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.kblink {
+    width: 100%;
+}
+
+.nullsec {
+    block: inline;
+    color: red;
+}
+
+.lowsec {
+    block: inline;
+    color: orange;
+}
+
+.highsec {
+    block: inline;
+    color: green;
+}
+
+/* / Search Results */
+
+/* Related */
+.relatedOverview {
+    margin-top: 10px;
+    width: 100%;
+    text-align: center;
+}
+.relatedSection {
+    width: 300px;
+    text-align: center;
+    block: inline;
+}
+.related {
+    margin-bottom: 5px;
+    border: solid 1px black;
+}
+.relatedDestroyed {
+    border: solid 1px #800000;
+}
+.relatedTitle {
+    font-weight: bold;
+    font-size: 150%;
+    text-align: center;
+    width: 100%;
+    border-bottom: 3px #aaa double;
+    margin-bottom: 10px;
+}
+.related img {
+    margin: 2px;
+}
+/* / Related */
+
+/* killmail detail */
+.killmailVictimInfo img, .killmailAttackerInfo img {
+    margin: 0.4em;
+}
+
+.killmailVictimInfo {
+    width: 240px;
+    margin: 0.5em;
+}
+
+.killmailAttackerInfo {
+    width: 240px;
+    margin: 0.5em;
+}
+
+.killmailShipDisplay {
+    margin: 1em;
+}
+
+.leftHalf {
+    float: left;
+}
+
+.rightHalf {
+    float: right;
+}
+
+.displayTable {
+    width: 100%;
+}
+
+.itemsTable {
+    width: 26em;
+    border: solid 1px #222;
+}
+
+.itemsTable tr td {
+    padding: 0.15em;
+    vertical-align: top;
+}
+
+.itemDropped {
+    background-color: #005000;
+    width: 2em;
+}
+
+.itemDestroyed {
+    background-color: #800000;
+    width: 2em;
+}
+
+.leftDisplayRow {
+    text-align: right;
+    padding-right: 0.3em;
+    padding-bottom: 0.2em;
+    width: 66px;
+}
+
+.shipDisplay {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.shipDisplay tr td {
+    vertical-align: top;
+    text-align: left;
+}
+
+.verticalImages {
+    width: 16px;
+    text-align: center;
+}
+
+/* / killmail detail */
+
+/* post */
+.notification {
+    margin: 3em;
+    padding: 1em;
+    font-size: 150%;
+    font-weight: bold;
+    width: 75%;
+    background-color: #f5f5f5;
+    color: black;
+}
+
+.smallNotification {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    background-color: #f5f5f5;
+    color: black;
+    margin-left: 5em;
+}
+
+.error {
+    margin: 3em;
+    padding: 1em;
+    font-size: 125%;
+    font-weight: bold;
+    width: 75%;
+    background-color: #b22222;
+    color: white;
+}
+
+.error a {
+    color: white;
+}
+
+.error img {
+    background-color: black;
+}
+
+.postArea {
+    width: 100%;
+}
+
+.postArea span {
+}
+
+.infoRequestSpan {
+    width: 5em;
+    float: left;
+    text-align: right;
+    font-weight: bold;
+    padding: 3px;
+}
+
+.inputSpan {
+    padding: 3px;
+}
+
+/* / post */
+
+/* topDogs*/
+.topDogs {
+    width: 125px;
+    border: solid 1px #333;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0.5em;
+}
+
+.topDogs span {
+    width: 100%;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+.topDogsTitle {
+    padding: 0.2em;
+    font-weight: bold;
+    width: 100%;
+}
+
+.topDogs img {
+    padding-top: 0.25em;
+}
+
+/* / topDogs */
+
+/* FAQ */
+.faq {
+    background-color: white;
+    color: black;
+    padding: 1em;
+}
+
+.faq a {
+    color: black;
+    text-decoration: underline;
+}
+
+.bigText {
+    width: 100%;
+    font-size: 250%;
+    text-align: center;
+    color: #800000;
+}
+
+.question {
+    font-size: 125%;
+    width: 100%;
+    font-weight: bold;
+    padding-top: 1.5em;
+    padding-bottom: 0.5em;
+    color: #800000;
+}
+
+.answer {
+    width: 100%;
+    display: block;
+}
+
+.faq fieldset {
+    margin: 0.75em;
+    background-color: #eee;
+}
+
+.faq legend {
+    background-color: #eee;
+    color: blue;
+}
+
+.faq ul li {
+    list-style-position: outside;
+    list-style-image: url(/images/wreck.png);
+    list-style-type: square;
+    margin-top: 1em;
+    margin-left: 2em;
+    margin-bottom: 0.25em;
+}
+
+/* / FAQ */
