@@ -70,7 +70,7 @@ function preProcessPane($type)
             if (strlen($subDomain) == 0 && (sizeof($p) == 0 || (sizeof($p) > 0 && ($p[0] == "killmail" || $p[0] == "date"))))
                 echo "\t<meta name=\"robots\" content=\"index,follow\">\n";
             else
-                echo "\t<meta name=\"robots\" content=\"noindex,nofollow\">\n";
+                echo "\t<meta name=\"robots\" content=\"noindex,nofollow\"/>\n";
             echo "\t<link rel=\"stylesheet\" href=\"$baseUrl/css/killwhore.css\" type=\"text/css\" />\n";
             //echo "\t<script type='text/javascript'>!window.jQuery && document.write('<script src=\"$baseUrl/js/jquery-1.5.1.min.js\"><\/script>');</script>\n";
             break;
