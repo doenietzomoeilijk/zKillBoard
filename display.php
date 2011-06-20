@@ -109,7 +109,7 @@ function eveImageLink($id, $shortHand, $altText, $link = true, $size = 64, $isWi
     echo "<span class='imageWrapper'>";
     if ($id != 0) echo "<img width='$size' height='$size' src='http://image.zzeve.com/$long/$id" . "_$size" . ".$extension' title='$altText' alt='$altText'/>";
     else echo "<img width='$size' height='$size' src='http://image.zzeve.com/Icons/items/64_64/icon09_10.png' title='$altText' alt='$altText'/>";
-    if ($class != "") echo "<span class='$class'>&nbsp</span>";
+    if ($class != "") echo "<span class='$class'>&nbsp;</span>";
     echo "</span>";
     if ($link) echo "</a>";
 }
