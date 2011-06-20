@@ -96,7 +96,7 @@ class PostPage extends Page
         echo "</span>";
 
         echo "<span class='postArea smallCorner infoSection'>";
-        echo "<form method='post'>";
+        echo "<form method='post' action=''>"; // Posts to current page
         echo "<span class='infoRequestSpan'>User ID:</span><span class='inputSpan'><input type='text' name='user_id' maxlength='8' size='8'/></span><br/>\n";
         echo "<span class='infoRequestSpan'>API Key:</span><span class='inputSpan'><input type='text' name='api_key' maxlength='64' size='64'/></span><br/>\n";
         echo "<span class='infoRequestSpan'>&nbsp;</span><span class='inputSpan'><input type='submit' value='Add API' /></span><br/>\n";
