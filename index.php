@@ -153,7 +153,7 @@ All artwork, screenshots, characters, vehicles, storylines, world facts or other
 CCP hf. has granted permission to KillWhore.com to use EVE Online and all associated logos and designs for promotional and information purposes on its website but does not endorse, and is not in any way affiliated with, KillWhore.com.
 CCP is in no way responsible for the content on or functioning of this website, nor can it be liable for any damage arising from the use of this website.
 ">CCP Copyright Notice</a>';
-            echo "</div></span></div></div></body></html>\n";
+            echo "</span></div></div></div></body></html>\n";
             break;
     }
 }
