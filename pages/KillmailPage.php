@@ -55,7 +55,7 @@ class KillmailPage extends Page
         $system = Info::getSystemName($detail['solarSystemID']);
         $time = $time - ($time % 3600);
         echo "<a href='/related/$system," . date("YmdH", $time) . "'>Related</a><br/>";
-        echo "</span>";
+        echo "</span></span>";
     }
 
     function viewMidPane($xml)
