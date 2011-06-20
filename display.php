@@ -33,7 +33,7 @@ function displayKill($killID, $killInfo)
         if (!in_array("date", $p)) echo "\n\t<span class='displayDate'><a href='$baseUrl/date/$displayDateUrl'>$displayDate</a></span>";
     }
 
-    echo "\n\t<span id='killmail$killID' class='smallCorner killPanel'>\n";
+    echo "\n\t<span class='smallCorner killPanel'>\n";
     echo "\t\t<span class='victimInfo'>\n";
     displayTypeInfo($killDetail, $victim, false, false);
     echo "\n\t\t</span>\n\t\t<span class='killInfo centerText'>\n";
