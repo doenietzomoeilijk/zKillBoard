@@ -85,7 +85,7 @@ class SearchPage extends Page
         $filters = $this->context['SearchParameters'];
         if (sizeof($filters)) {
             asort($filters);
-            echo implode("<hr/>", $filters);
+            echo implode("<br/>", $filters);
         } else if ($this->context['pageType'] == "killmail") {
             echo "Killmail";
         }
