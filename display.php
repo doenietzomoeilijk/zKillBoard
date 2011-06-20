@@ -94,7 +94,7 @@ function eveImageLink($id, $shortHand, $altText, $link = true, $size = 64, $isWi
 
     if ($id == 0) {
         echo "<span class='imageWrapper'>";
-        echo "<img width='$size' height='$size' src='http://image.zzeve.com/Icons/items/64_64/icon09_10.png' title='Unknown'/>";
+        echo "<img width='$size' height='$size' src='http://image.zzeve.com/Icons/items/64_64/icon09_10.png' title='Unknown' alt='Unknown'/>";
         echo "</span>";
         return;
     }
