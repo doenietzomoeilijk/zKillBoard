@@ -68,7 +68,7 @@ function preProcessPane($type)
             echo "<head>\n";
             echo "\t<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
             if (strlen($subDomain) == 0 && (sizeof($p) == 0 || (sizeof($p) > 0 && ($p[0] == "killmail" || $p[0] == "date"))))
-                echo "\t<meta name=\"robots\" content=\"index,follow\">\n";
+                echo "\t<meta name=\"robots\" content=\"index,follow\"/>\n";
             else
                 echo "\t<meta name=\"robots\" content=\"noindex,nofollow\"/>\n";
             echo "\t<link rel=\"stylesheet\" href=\"$baseUrl/css/killwhore.css\" type=\"text/css\" />\n";
