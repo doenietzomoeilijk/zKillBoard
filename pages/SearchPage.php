@@ -73,7 +73,7 @@ class SearchPage extends Page
             if (isset($this->context['display_kills']) && sizeof($this->context['display_kills']) > 2) calculateFirstAndPrevious($this->context['display_kills'], $this->context);
             else if (isset($this->context['display_losses']) && sizeof($this->context['display_losses']) > 2) calculateFirstAndPrevious($this->context['display_losses'], $this->context);
         }
-        $this->context['stats'] = getStatistics($this->context, $this->context['subDomainPageType'], $subDomainEveID);
+        if (in_array("stats", $this->p)) $this->context['stats'] = getStatistics($this->context, $this->context['subDomainPageType'], $subDomainEveID);
     }
 
 
@@ -106,6 +106,11 @@ class SearchPage extends Page
         if (isset($this->context['prevMonth'])) displayTimeUrl($this->context['prevMonth']);
         if (isset($this->context['prevDay'])) displayTimeUrl($this->context['prevDay']);
         if (isset($this->context['nextDay'])) displayTimeUrl($this->context['nextDay']);
+
+        $newUrl = $this->p;
+        if (!in_array("stats", $this->p)) $newUrl[] = "stats";
+        echo "<br/><a href='/" . implode("/", $newUrl) . "'>Statistics</a>";
+
         echo "</span></span>";
 
         echo "<span class='leftRightSpacer'/>";
@@ -115,11 +120,11 @@ class SearchPage extends Page
 
     function viewMidPane($xml)
     {
-        /*if (isset($this->context['stats'])) {
+        if (isset($this->context['stats'])) {
             echo "<span>";
-            print_r($this->context['stats']);
+            displayStats($this->context['stats']);
             echo "</span>";
-        }*/
+        }
         $afterKillID = isset($this->context['display_after']) ? $this->context['display_after'] : null;
         $beforeKillID = isset($this->context['display_before']) ? $this->context['display_before'] : null;
         if (isset($this->context['display_kills'])) {

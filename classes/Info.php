@@ -115,7 +115,8 @@ class Info
         return $name;
     }
 
-    public static function getEveIdFromTicker($ticker) {
+    public static function getEveIdFromTicker($ticker)
+    {
         $eveID = Db::queryField("select itemID from eveNames where ticker = :name", "itemID", array(":name" => strtoupper($ticker)), 86400);
         if ($eveID == null) return Info::getEveID($ticker);
         return $eveID;
@@ -131,6 +132,19 @@ class Info
     public static function getEveName($id)
     {
         $name = Db::queryField("select itemName from eveNames where itemID = :id", "itemName", array(":id" => $id), 86400);
+        return $name;
+    }
+
+    /**
+     * Get the name of the group
+     *
+     * @static
+     * @param int $groupID
+     * @return string
+     */
+    public static function getGroupName($groupID)
+    {
+        $name = Db::queryField("select groupName from invGroups where groupID = :id", "groupName", array(":id" => $groupID), 86400);
         return $name;
     }
 }

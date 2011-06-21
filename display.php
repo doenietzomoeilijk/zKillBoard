@@ -152,23 +152,26 @@ function cleanURL($url)
     return $url;
 }
 
-function displayTopDogs($title, $type, $idName, $topDogs)
+function displayTopDogs($title, $type, $idName, $topDogs, $limit = 5)
 {
-    if (!isset($topDogs)) return;
+    if (!isset($topDogs) || sizeof($topDogs) == 0) return;
 
     global $p;
 
-    // Preprocess top dogs for 0 type records
+    $npcCount = 0;
     foreach ($topDogs as $topDog) {
         $id = $topDog[$idName];
-        if ($id == 0) unset($topDogs, $topDog);
+        if ($id == 0) $npcCount++;
     }
-
-    if (!isset($topDogs) || sizeof($topDogs) == 0) return;
+    if ($npcCount == sizeof($topDogs)) return;
 
     echo "<span class='topDogs smallCorner'><span class='topDogsTitle'>$title</span><span>";
+    $displayCount = 0;
     foreach ($topDogs as $topDog) {
         $id = $topDog[$idName];
+        if ($id == 0) continue;
+        $displayCount++;
+        if ($displayCount > $limit) continue;
         $name = $type == "ship" ? Info::getItemName($id) : Info::getEveName($id);
         $count = isset($topDog['count']) ? $topDog['count'] : null;
         eveImageLink($id, $type, $name, $name != null);
@@ -344,7 +347,7 @@ function formatIskPrice($value)
 {
     global $formatIskIndexes;
 
-    if ($value == 0) return "";
+    if ($value == 0) return "0.00";
     if ($value < 1000) return number_format($value, 2);
     $iskIndex = 0;
     while ($value > 999.99) {
@@ -358,4 +361,76 @@ function pluralize($count, $text)
 {
     if ($count == 1) return "$count $text";
     return number_format($count, 0) . " {$text}s";
+}
+
+function displayStats($stats = array())
+{
+    if ($stats == null || sizeof($stats) == 0) return;
+
+    $totalKills = 0;
+    $totalLosses = 0;
+    $totalKillVal = 0;
+    $totalLossVal = 0;
+    $shipTypes = array();
+    foreach ($stats as $stat) {
+        $groupID = $stat["groupID"];
+        if ($groupID == null) continue;
+        $groupName = $groupID == 0 ? "Unknown" : Info::getGroupName($groupID);
+        $shipTypes[$groupName] = $stat;
+        $totalKills += getValue($stat, "kills_num"); //$stat["kills_num"];
+        $totalLosses += getValue($stat, "losses_num"); //$stat["losses_num"];
+        $totalKillVal += getValue($stat, "kills_value"); // $stat["kills_value"];
+        $totalLossVal += getValue($stat, "losses_value"); //$stat["losses_value"];
+    }
+
+    echo "<fieldset class='smallCorner statistics'><legend class='bold'>Statistics</legend>";
+    ksort($shipTypes);
+    echo "<span class='groupStat bold groupStatTitle'>";
+    echo "<span class='groupName'>ShipType</span>";
+    echo "<span class='groupCount'>Kills</span>";
+    echo "<span class='groupPct'> % </span>";
+    echo "<span class='groupValue'>Value</span>";
+    echo "<span class='groupCount'>Losses</span>";
+    echo "<span class='groupPct'> % </span>";
+    echo "<span class='groupValue'>Value</span>";
+    echo "</span>";
+    $rowCount = 1;
+    foreach ($shipTypes as $shipType => $stat) {
+        $kills = getValue($stat, "kills_num"); //$stat['kills_num'];
+        $losses = getValue($stat, "losses_num"); //$stat['losses_num'];
+        $kills_value = getValue($stat, "kills_value"); //$stat['kills_value'];
+        $losses_value = getValue($stat, "losses_value"); // $stat['losses_value'];
+        $rowCount++;
+        $oddRow = $rowCount % 2 == 0 ? "" : " oddRow";
+        echo "<span class='groupStat $oddRow'>";
+        echo "<span class='groupName'>$shipType</span>";
+        echo "<span class='groupCount'>" . number_format($kills, 0) . "</span>";
+        echo "<span class='groupPct'>" . calcPercentage($kills, $totalKills) . "</span>";
+        echo "<span class='groupValue'>" . formatIskPrice($kills_value) . "</span>";
+        echo "<span class='groupCount'>" . number_format($losses, 0) . "</span>";
+        echo "<span class='groupPct'>" . calcPercentage($losses, $totalLosses) . "</span>";
+        echo "<span class='groupValue'>" . formatIskPrice($losses_value) . "</span>";
+        echo "</span>";
+    }
+    echo "<span class='groupStat bold groupStatTotal'>";
+    echo "<span class='groupName'>Total</span>";
+    echo "<span class='groupCount'>" . number_format($totalKills, 0) . "</span>";
+    echo "<span class='groupPct'>&nbsp;</span>";
+    echo "<span class='groupValue'>" . formatIskPrice($totalKillVal) . "</span>";
+    echo "<span class='groupCount'>" . number_format($totalLosses, 0) . "</span>";
+    echo "<span class='groupPct'>&nbsp;</span>";
+    echo "<span class='groupValue'>" . formatIskPrice($totalLossVal) . "</span>";
+    echo "</span>";
+    echo "</fieldset>";
+}
+
+function getValue(&$stat, $field) {
+    if (!isset($stat[$field])) return 0;
+    return $stat[$field];
+}
+
+function calcPercentage($numerator, $denominator)
+{
+    if ($denominator == 0) return "0.0 %";
+    return number_format(($numerator / $denominator) * 100, 1) . " %";
 }

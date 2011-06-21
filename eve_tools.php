@@ -499,9 +499,9 @@ function topDogs(&$context, $type, $isVictim = false, $limit = 5)
             $pilotID = $subDomainEveID;
             break;
     }
-    $whereClauses[] = "characterID " . ($pilotID == null ? "!= 0" : " = $pilotID");
-    $whereClauses[] = "corporationID " . ($corpID == null ? "!= 0" : " = $corpID");
-    if ($subDomainGroupID == null) $whereClauses[] = "allianceID " . ($alliID == null ? "!= 0" : " = $alliID");
+    if ($pilotID != null) $whereClauses[] = "characterID = $pilotID";
+    if ($corpID != null) $whereClauses[] = "corporationID = $corpID";
+    if ($alliID != null) $whereClauses[] = "allianceID = $alliID";
 
     $tables = $queryInfo["tables"];
     $queryParameters = $queryInfo["parameters"];
@@ -511,7 +511,7 @@ function topDogs(&$context, $type, $isVictim = false, $limit = 5)
 				from " . implode(", ", $tables) . "
 				where " . implode(" and ", $whereClauses) . "
 				group by 1 ) as topRows order by count desc";
-    if ($limit > 0) $query .= " limit $limit";
+    if ($limit > 0) $query .= " limit " . ($limit + 1);
 
     $result = Db::query($query, $queryParameters, 120);
     return $result;
@@ -598,33 +598,45 @@ function getStatistics($context, $type, $eveID)
         // Get the full column name
         $typeID = getColumnType($type);
 
+        $whereClauses[] = "characterID != 0";
         // And build the query.
         $query = "select year, month, joined.groupID,
                      sum(if(finalBlow=1,1,0)) kills_num, sum(if(finalBlow = 1,total_price,0)) kills_value,
-                     sum(if(isVictim='T',1,0)) losses_num,sum(if(isVictim='T',total_price,0)) losses_value\n";
+                     sum(if(isVictim='T',1,0)) losses_num,sum(if(isVictim='T',total_price,0)) losses_value ";
         $query .= " from " . implode(", ", $tables);
         $query .= " where " . implode(" and ", $whereClauses);
         if ($type != "all") $query .= " and $typeID = $eveID ";
         $query .= " group by year, month, joined.groupID";
 
-        // Remove the isVictim whereClause and parameter.  We don't need to limit
-        // to just victims when doing statistics.  Otherwise we would have to
-        // execute the query twice, once for victims and once for kills.
-        unset($parameters[":victim"]);
-        $query = str_replace("and isVictim = :victim", "", $query);
-        $query = str_replace("and isVictim != :victim", "", $query); //
+        $stat1 = Db::query($query, $parameters);
+        $parameters[":victim"] = $parameters[":victim"] == "F" ? "T" : "F";
+        $stat2 = Db::query($query, $parameters);
 
-        $statistics = Db::query($query, $parameters);
+        $statistics = array();
+        statsMerge($statistics, $stat1, "kills_num", "kills_value");
+        statsMerge($statistics, $stat2, "losses_num", "losses_value");
+        $statistics = array_values($statistics);
 
         $json = json_encode($statistics);
         Db::execute("replace into {$dbPrefix}cache (eve_id, type, year, month, query, result) values (:eveID, 'stat', :year, :month, :hash, compress(:result))",
                     array(":year" => $parameters[":year"], ":month" => $parameters[":month"], ":eveID" => $eveID, ":hash" => $hash, ":result" => $json));
         $key = Db::getKey($statsQuery, $statsParameters);
-        Log::log("Removing Key");
         Memcached::delete($key);
     } else {
-        $statistics = json_decode($statistics);
+        $statistics = json_decode($statistics, true);
     }
 
     return $statistics;
+}
+
+function statsMerge(&$statistics, &$statArray, $col1, $col2) {
+    foreach($statArray as $stat) {
+        $key = $stat['year'] . "|" . $stat['month'] . "|" . $stat['groupID'];
+        if (!isset($statistics[$key])) $statistics[$key] = array();
+        $statistics[$key]["year"] = $stat["year"];
+        $statistics[$key]["month"] = $stat["month"];
+        $statistics[$key]["groupID"] = $stat["groupID"];
+        $statistics[$key][$col1] = $stat[$col1];
+        $statistics[$key][$col2] = $stat[$col2];
+    }
 }

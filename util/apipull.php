@@ -43,7 +43,7 @@ function handleApiException($user_id, $char_id, $exception)
             $clearCharacters = true;
             $clearApiEntry = true;
             break;
-        case 0: // API Date could not be read / parsed, orginial exception (Something is wrong with the XML and it couldn't be parsed)
+        case 0: // API Date could not be read / parsed, original exception (Something is wrong with the XML and it couldn't be parsed)
         case 500: // Internal Server Error (More CCP Issues)
         case 520: // Unexpected failure accessing database. (More CCP issues)
         case 404: // URL Not Found (CCP having issues...)
@@ -342,6 +342,11 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
 
     // Set ship groupIDs for the kills just processed
     Db::execute("update {$dbPrefix}participants p,invTypes i set p.groupID = i.groupID where i.groupID is null and i.typeID = p.shipTypeID");
+
+    if ($killsParsedAndAdded > 0) {
+        Db::execute("update {$dbPrefix}participants p, invTypes i set p.groupID = i.groupID where p.shipTypeID = i.typeID and p.groupID is null");
+        Db::execute("truncate {$dbPrefix}cache");
+    }
 
     return $killsParsedAndAdded;
 }
