@@ -69,7 +69,7 @@ class PostPage extends Page
                     $this->context['alliCorpList'] = Db::query("select corps.corporationID corpsID, chars.corporationID charsID, isDirector from zz_alliance_corporations corps left join zz_api_characters chars on (corps.corporationID = chars.corporationID and chars.isDirector = 'T') where  allianceID = :alliID group by 1,2", array(":alliID" => $subDomainEveID));
                     break;
                 case 'corp':
-                    $this->context['directorCount'] = Db::queryField("select count(distinct corporationID) count from {$dbPrefix}api_characters where isDirector = 'T' and corporationID = :corpID",
+                    $this->context['directorCount'] = Db::queryField("select count(characterID) count from {$dbPrefix}api_characters where isDirector = 'T' and corporationID = :corpID",
                                                                      "count", array(":corpID" => $subDomainEveID));
                     break;
             }
