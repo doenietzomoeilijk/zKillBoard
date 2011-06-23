@@ -18,7 +18,7 @@ class Cron
         $error = null;
         try {
             // Get the cron jobs that need execution
-            $cronjobs = Db::query("select cronID, cronInterval, fileName, functionName from {$dbPrefix}cronjobs where (cronInterval + lastExecution) < unix_timestamp()", array(), 0);
+            $cronjobs = Db::query("select cronID, cronInterval, fileName, functionName from {$dbPrefix}cronjobs where active = 'Y' and (cronInterval + lastExecution) < unix_timestamp()", array(), 0);
             foreach ($cronjobs as $cronjob) {
                 $cronID = $cronjob["cronID"];
                 $fileName = $cronjob["fileName"];
