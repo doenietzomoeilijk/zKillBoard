@@ -314,12 +314,8 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
         if ($minKillID == -1) $minKillID = $killID;
         else $minKillID = min($minKillID, $killID);
 
-        // Don't process the kill if it's NPC only
-        $npcOnly = true;
-        foreach ($kill->attackers as $attacker) {
-            $npcOnly &= $attacker->characterID == 0;
-        }
-        if ($npcOnly) continue;
+        // Do some validation on the kill
+        if (!validKill($kill)) continue;
 
         $json = json_encode($kill->toArray());
         Db::execute("insert into {$dbPrefix}killmail (killID, kill_json) values (:killID, :json) on duplicate key update kill_json = :json",
@@ -330,7 +326,7 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
         foreach ($kill->items as $item) $totalCost += processItem($killID, $item, $itemInsertOrder++);
         $totalCost += processVictim($killID, $kill->victim);
         foreach ($kill->attackers as $attacker) processAttacker($killID, $attacker);
-        processKill($kill, $npcOnly, sizeof($kill->attackers), $totalCost);
+        processKill($kill, false, sizeof($kill->attackers), $totalCost);
         $killsParsedAndAdded++;
     }
     try {
@@ -349,6 +345,31 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
     }
 
     return $killsParsedAndAdded;
+}
+
+/**
+ * @param  $kill
+ * @return bool
+ */
+function validKill(&$kill)
+{
+    //$killID = $kill->killID;
+
+    // Don't process the kill if it's NPC only
+    $npcOnly = true;
+    foreach ($kill->attackers as $attacker) {
+        $npcOnly &= $attacker->characterID == 0;
+    }
+    if ($npcOnly) return false;
+
+    // Let's make sure this kill is valid.  It is API, but sometimes it can be wrong
+
+    // Make sure the victim has a valid shipTypeID
+    if ($kill->victim->shipTypeID == 0) {
+        return false;
+    }
+
+    return false;
 }
 
 function processKill(&$kill, $npcOnly, $number_involved, $totalCost)
