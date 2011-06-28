@@ -1,0 +1,10 @@
+zKillBoard is a side project that I am doing "just for fun". Designing a killboard from scratch has many challenges and hurdles to overcome, and is a tough but entertaining project.
+
+Author: Squizz Caphinator / Clinton Weiss
+
+TODO:
+
+- Add campaigns and contracts.
+- More seperation of presentation from the code.
+- Continue to organize code into proper classes.
+- Fix the issue where multiple (but same) POS modules appear as one module on a related page.
