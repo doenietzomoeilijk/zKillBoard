@@ -34,6 +34,10 @@ class FaqPage extends Page
         echo "only slightly less paranoid when giving out API keys.";
         echo "</span>";
 
+        echo "<span class='question'>Is this killboard open source? Where can I get the source?</span>";
+        echo "<span class='answer'>It is open source!  The source code resides <a target='_blank' href='https://github.com/cvweiss/zKillBoard'>here at GitHub</a>.  ";
+        echo "Feel free to browse the code, make fun of it, and even contribute if you have some programming skills.</span>";
+
         echo "<span class='question'>What do these side bars mean on the search pages?</span>";
         echo "<span class='answer'>Each page will show you the the five pilots, corps, alliances, and ships that were involved with your current search terms.</span>";
 
