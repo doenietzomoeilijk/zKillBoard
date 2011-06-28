@@ -160,7 +160,7 @@ function doPullCharKills()
     global $dbPrefix;
     $numKillsProcessed = 0;
 
-    $apiList = Db::query("select api.user_id, api_key, characterID from zz_api api, zz_api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'F' and cachedUntil < unix_timestamp()");
+    $apiList = Db::query("select api.user_id, api_key, characterID from {$dbPrefix}api api, {$dbPrefix}api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'F' and cachedUntil < unix_timestamp()", array(), 0);
 
     foreach ($apiList as $api) {
         $user_id = $api['user_id'];
@@ -187,29 +187,68 @@ function doPullCharKills()
     if ($numKillsProcessed > 0) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
 }
 
+/**
+ * This function should run no more often than every 72 hours
+ *
+ * @return void
+ */
+function doPullPrivateKillsforDirectors()
+{
+    global $dbPrefix;
+    $numKillsProcessed = 0;
+
+    $apiList = Db::query("select api.user_id, api_key, characterID from {$dbPrefix}api api, {$dbPrefix}api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'T'", array(), 0);
+
+    foreach ($apiList as $api) {
+        $user_id = $api['user_id'];
+        $char_id = $api['characterID'];
+        $api_key = $api['api_key'];
+        try {
+            $pheal = new Pheal($user_id, $api_key, 'char');
+            // Prefetch the killlog API to get the cachedUntil
+            $killlog = $pheal->Killlog(array('characterID' => $char_id));
+            $cachedUntil = $killlog->cached_until_unixtime;
+
+            $numKillsProcessed += processApiKills($user_id, $api_key, $char_id, 'char');
+        } catch (Exception $ex) {
+            handleApiException($user_id, $char_id, $ex);
+            continue;
+        }
+
+        if ($cachedUntil != -1) {
+            Db::execute("update {$dbPrefix}api_characters set cachedUntil = :cachedUntil where user_id = :user_id and characterID = :characterID",
+                        array(":cachedUntil" => $cachedUntil, ":user_id" => $user_id, ":characterID" => $char_id));
+        }
+    }
+
+    if ($numKillsProcessed > 0) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
+
+}
+
 function doPullCorpKills()
 {
     global $dbPrefix;
     $numKillsProcessed = 0;
 
     $corpApiCountMap = array();
-    $corpApiCountResult = Db::query("select corporationID, count(distinct characterID) count from zz_api_characters where isDirector = 'T' group by 1");
+    $corpApiCountResult = Db::query("select corporationID, count(distinct characterID) count from {$dbPrefix}api_characters where isDirector = 'T' group by 1");
     foreach ($corpApiCountResult as $corpApi) {
         $corporationID = $corpApi['corporationID'];
         $corpApiCountMap["$corporationID"] = max(1, min(60, $corpApi['count']));
     }
 
     foreach ($corpApiCountMap as $corporationID => $directorCount) {
+        $iterations = intval(60 / intval(60 / $directorCount));
+        $intervals = intval(60 / $iterations);
         $minute = date("i");
-        $currentIteration = $minute / 60;
-        $limit = ((int)$currentIteration);
+        $limit = 0;
+        while (($limit + 1) * $intervals < $minute) $limit++;
 
-        $api = Db::queryRow("select * from zz_api api, zz_api_characters chars
+        $api = Db::queryRow("select * from {$dbPrefix}api api, {$dbPrefix}api_characters chars
 							where api.user_id = chars.user_id and
-								chars.corporationID = :corporationID and isDirector = 'T'
-								and cachedUntil < unix_timestamp() and error_code = 0
+								chars.corporationID = :corporationID and isDirector = 'T' and error_code = 0
 							order by chars.user_id, characterID limit $limit, 1",
-                            array(":corporationID" => $corporationID));
+                            array(":corporationID" => $corporationID), 0);
         if ($api == null) continue;
         if ($api['cachedUntil'] > time()) continue;
         $user_id = $api['user_id'];
@@ -293,11 +332,11 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
     }
 
     $ids = implode(",", $allKillIds);
-    Db::execute("create temporary table zz_kills_temp (killID int(16) primary key ) engine = memory");
-    Db::execute("insert into zz_kills_temp values $ids");
-    $result = Db::query("select temp.killID from zz_kills_temp temp left join zz_kills as kills on temp.killID = kills.killID where kills.killID is null",
+    Db::execute("create temporary table {$dbPrefix}kills_temp (killID int(16) primary key ) engine = memory");
+    Db::execute("insert into {$dbPrefix}kills_temp values $ids");
+    $result = Db::query("select temp.killID from {$dbPrefix}kills_temp temp left join {$dbPrefix}kills as kills on temp.killID = kills.killID where kills.killID is null",
                         array(), 0);
-    Db::execute("drop temporary table zz_kills_temp");
+    Db::execute("drop temporary table {$dbPrefix}kills_temp");
 
     $idsToParse = array();
     foreach ($result as $row) {
@@ -353,7 +392,7 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
  */
 function validKill(&$kill)
 {
-    //$killID = $kill->killID;
+    $killID = $kill->killID;
 
     // Don't process the kill if it's NPC only
     $npcOnly = true;
@@ -366,10 +405,11 @@ function validKill(&$kill)
 
     // Make sure the victim has a valid shipTypeID
     if ($kill->victim->shipTypeID == 0) {
+        echo "$killID Invalid shipTypeID\n";
         return false;
     }
 
-    return false;
+    return true;
 }
 
 function processKill(&$kill, $npcOnly, $number_involved, $totalCost)
