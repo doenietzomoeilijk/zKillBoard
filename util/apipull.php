@@ -26,6 +26,7 @@ function handleApiException($user_id, $char_id, $exception)
             $updateCacheTime = true;
             break;
         case 200: // Current security level not high enough.
+        case 207: // Not available for NPC corporations.
         case 209:
             $demoteCharacter = true;
             break;
