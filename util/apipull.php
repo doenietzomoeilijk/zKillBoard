@@ -84,8 +84,6 @@ function doApiSummary() {
     $corpKills = Db::queryField("select contents count from {$dbPrefix}storage where locker = 'corpKillsProcessed'", "count");
     Db::execute("delete from {$dbPrefix}storage where locker in ('charKillsProcessed', 'corpKillsProcessed')");
 
-    echo "Kills: $charKills $corpKills\n";
-
     if ($charKills != null && $charKills > 0) Log::irc(pluralize($charKills, "Kill") . " total pulled from Character Keys in the last 60 minutes.");
     if ($corpKills != null && $corpKills > 0) Log::irc(pluralize($corpKills, "Kill") . " total pulled from Corporation Keys in the last 60 minutes.");
 }
