@@ -76,7 +76,7 @@ function preProcessPane($type)
             break;
         case "Header":
             echo "<div id='content'><div id='contentExcludingFooter'><div id='headerPane'>\n";
-            echo "<a href='$baseUrl/'><img src='/images/killwhore.png' alt='Primary. Banner'/></a>";
+            echo "<a href='$baseUrl/'><img src='/images/killwhore.jpg' alt='Primary. Banner'/></a>";
             break;
         case "Menu":
             echo "<div id='menu'><a href='$baseUrl'>Home</a>";
