@@ -77,6 +77,19 @@ function handleApiException($user_id, $char_id, $exception)
     }
 }
 
+function doApiSummary() {
+    global $dbPrefix;
+
+    $charKills = Db::queryField("select contents count from {$dbPrefix}storage where locker = 'charKillsProcessed'", "count");
+    $corpKills = Db::queryField("select contents count from {$dbPrefix}storage where locker = 'corpKillsProcessed'", "count");
+    Db::execute("delete from {$dbPrefix}storage where locker in ('charKillsProcessed', 'corpKillsProcessed')");
+
+    echo "Kills: $charKills $corpKills\n";
+
+    if ($charKills != null && $charKills > 0) Log::irc(pluralize($charKills, "Kill") . " total pulled from Character Keys in the last 60 minutes.");
+    if ($corpKills != null && $corpKills > 0) Log::irc(pluralize($corpKills, "Kill") . " total pulled from Corporation Keys in the last 60 minutes.");
+}
+
 function doPopulateCharactersTable($user_id = null)
 {
     global $dbPrefix;
@@ -185,7 +198,8 @@ function doPullCharKills()
         }
     }
 
-    if ($numKillsProcessed > 0) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
+    if ($numKillsProcessed > 10) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
+    if ($numKillsProcessed > 0) Db::execute("insert into {$dbPrefix}storage values ('charKillsProcessed', $numKillsProcessed) on duplicate key update contents = contents + $numKillsProcessed");
 }
 
 /**
@@ -222,8 +236,8 @@ function doPullPrivateKillsforDirectors()
         }
     }
 
-    if ($numKillsProcessed > 0) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
-
+    if ($numKillsProcessed > 10) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
+    if ($numKillsProcessed > 0) Db::execute("insert into {$dbPrefix}storage values ('charKillsProcessed', $numKillsProcessed) on duplicate key update contents = contents + $numKillsProcessed");
 }
 
 function doPullCorpKills()
@@ -274,7 +288,8 @@ function doPullCorpKills()
         }
     }
 
-    if ($numKillsProcessed > 0) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Corporate Keys.");
+    if ($numKillsProcessed > 10) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Corporate Keys.");
+    if ($numKillsProcessed > 0) Db::execute("insert into {$dbPrefix}storage values ('corpKillsProcessed', $numKillsProcessed) on duplicate key update contents = contents + $numKillsProcessed");
 }
 
 function doPullKills()
