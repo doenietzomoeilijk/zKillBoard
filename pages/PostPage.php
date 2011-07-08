@@ -130,15 +130,17 @@ class PostPage extends Page
                     echo "</span>";
                     break;
                 case 'alli':
-                    $alliCorpList = $context['alliCorpList'];
                     $haveKeys = array();
                     $noKeys = array();
-                    foreach ($alliCorpList as $corp) {
-                        $corpID = $corp['corpsID'];
-                        $isDirector = $corp['isDirector'] == 'T';
-                        $name = Info::getCorpName($corpID, true);
-                        if ($isDirector) $haveKeys[$name] = $corpID;
-                        else $noKeys[$name] = $corpID;
+                    if (isset($context['alliCorpList'])) {
+                        $alliCorpList = $context['alliCorpList'];
+                        foreach ($alliCorpList as $corp) {
+                            $corpID = $corp['corpsID'];
+                            $isDirector = $corp['isDirector'] == 'T';
+                            $name = Info::getCorpName($corpID, true);
+                            if ($isDirector) $haveKeys[$name] = $corpID;
+                            else $noKeys[$name] = $corpID;
+                        }
                     }
                     ksort($haveKeys);
                     ksort($noKeys);
