@@ -13,3 +13,6 @@ $memcachePort = "63211";
 
 // IRC Log File
 $ircLogFile = "/var/www/bin/eggdrop/bot2.log";
+
+// Disqus short site id
+$disqus_id = "killwhore";

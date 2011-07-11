@@ -404,7 +404,7 @@ a:hover {
 }
 
 .rightHalf {
-    float: right;
+    float: left;
 }
 
 .displayTable {
@@ -656,4 +656,5 @@ a:hover {
     margin-left: auto;
     margin-right: auto;
     font-size: 80%;
+    border-color:  #222;
 }

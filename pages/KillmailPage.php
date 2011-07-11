@@ -42,12 +42,12 @@ class KillmailPage extends Page
 
     function viewLeftPane($xml)
     {
-        displayTopDogs("Final Blow", "pilot", "characterID", array($this->context['finalBlow']));
-        if (isset($this->context['topDamage'])) displayTopDogs("Top Damage", "pilot", "characterID", array($this->context['topDamage']));
     }
 
     function viewRightPane($xml)
     {
+        global $disqus_id;
+
         echo "<span class='smallCorner menuSpan'><span class='title'>Navigation</span><span>";
         $killDetail = $this->context['killDetail'];
         $detail = $killDetail["detail"];
@@ -56,6 +56,29 @@ class KillmailPage extends Page
         $time = $time - ($time % 3600);
         echo "<a href='/related/$system," . date("YmdH", $time) . "'>Related</a><br/>";
         echo "</span></span>";
+
+        displayTopDogs("Final Blow", "pilot", "characterID", array($this->context['finalBlow']));
+        if (isset($this->context['topDamage'])) displayTopDogs("Top Damage", "pilot", "characterID", array($this->context['topDamage']));
+
+        if (isset($disqus_id) && $disqus_id != "") {
+            echo "<span class='typeHeader typeHeaderSmall'>Comments</span>";
+            echo "<div class='smallCorner comments'>"; // comments
+
+            echo "<div id=\"disqus_thread\"></div>
+<script type=\"text/javascript\">
+    var disqus_shortname = '$disqus_id';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
+<a href=\"http://disqus.com\" class=\"dsq-brlink\">blog comments powered by <span class=\"logo-disqus\">Disqus</span></a>
+";
+
+            echo "</div>"; // / comments
+        }
     }
 
     function viewMidPane($xml)
@@ -82,25 +105,6 @@ class KillmailPage extends Page
             echo "</div>";
         }
         echo "</div>";
-
-        echo "<div class='smallCorner comments'>"; // comments
-
-            echo "<div id=\"disqus_thread\"></div>
-<script type=\"text/javascript\">
-    var disqus_shortname = 'killwhore';
-
-    /* * * DON'T EDIT BELOW THIS LINE * * */
-    (function() {
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
-<a href=\"http://disqus.com\" class=\"dsq-brlink\">blog comments powered by <span class=\"logo-disqus\">Disqus</span></a>
-";
-
-        echo "</div>"; // / comments
 
         echo "</div>"; // Involved parties
 
