@@ -32,7 +32,7 @@ class KillmailPage extends Page
         }
         $this->context['finalBlow'] = $finalBlow;
         $topDamage = null;
-        foreach($attackers as $attacker) {
+        foreach ($attackers as $attacker) {
             if ($topDamage != null) break;
             if ($attacker['characterID'] == 0) continue;
             $topDamage = $attacker;
@@ -67,6 +67,7 @@ class KillmailPage extends Page
         $victim = $killDetail['victim'];
         $attackers = $killDetail['attackers'];
         $items = $killDetail['items'];
+        $killID = $detail['killID'];
 
         echo "<div class='leftHalf involvedParties'>";
         echo "<div class='killmailVictimInfo smallCorner'>\n";
@@ -81,6 +82,26 @@ class KillmailPage extends Page
             echo "</div>";
         }
         echo "</div>";
+
+        echo "<div class='smallCorner comments'>"; // comments
+
+            echo "<div id=\"disqus_thread\"></div>
+<script type=\"text/javascript\">
+    var disqus_shortname = 'killwhore';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href=\"http://disqus.com/?ref_noscript\">comments powered by Disqus.</a></noscript>
+<a href=\"http://disqus.com\" class=\"dsq-brlink\">blog comments powered by <span class=\"logo-disqus\">Disqus</span></a>
+";
+
+        echo "</div>"; // / comments
+
         echo "</div>"; // Involved parties
 
         echo "<div class='rightHalf shipDetails'>";

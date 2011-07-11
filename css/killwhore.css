@@ -649,3 +649,11 @@ a:hover {
     border-top:  solid 2px #fff;
 }
 /* / Statistics */
+
+/* Comments */
+.comments {
+    width: 240px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 80%;
+}
