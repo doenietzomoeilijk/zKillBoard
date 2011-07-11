@@ -25,6 +25,10 @@ body {
     line-height: 1;
 }
 
+table {
+    clear: both;
+}
+
 ol, ul {
     list-style: none;
 }
