@@ -262,7 +262,7 @@ function doPullCorpKills()
         $api = Db::queryRow("select * from {$dbPrefix}api api, {$dbPrefix}api_characters chars
 							where api.user_id = chars.user_id and
 								chars.corporationID = :corporationID and isDirector = 'T' and error_code = 0
-							order by chars.user_id, characterID limit $limit, 1",
+							order by characterID limit $limit, 1",
                             array(":corporationID" => $corporationID), 0);
         if ($api == null) continue;
         if ($api['cachedUntil'] > time()) continue;
