@@ -228,10 +228,12 @@ function doPullPrivateKillsforDirectors()
             continue;
         }
 
-        if ($cachedUntil != -1) {
+        // Updating this will affect corp director pulls.  Since this fucntion is ran every 3 hours cache overlapping
+        // on the character key will not happen.
+        /*if ($cachedUntil != -1) {
             Db::execute("update {$dbPrefix}api_characters set cachedUntil = :cachedUntil where user_id = :user_id and characterID = :characterID",
                         array(":cachedUntil" => $cachedUntil, ":user_id" => $user_id, ":characterID" => $char_id));
-        }
+        }*/
     }
 
     if ($numKillsProcessed > 10) Log::irc(pluralize($numKillsProcessed, "Kill") . " pulled from Character Keys.");
