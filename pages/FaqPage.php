@@ -47,7 +47,7 @@ class FaqPage extends Page
         echo "<fieldset class='smallCorner'><legend class='smallCorner'>Example</legend>";
         echo "<ul><li><a href='http://killwhore.com/with/corp/Woopatang'>http://killwhore.com/with/corp/Woopatang</a>";
         echo "<br/>Shows kills involving the corporation Woopatang.</li>";
-        echo "<li><a href='http://killwhore.com/with/alli/ROMANIAN-LEGION/against/alli/White+Noise.'>http://killwhore.com/with/alli/ROMANIAN-LEGION/against/alli/White Noise.</a>";
+        echo "<li><a href='http://killwhore.com/year/2011/month/05/with/alli/ROMANIAN-LEGION/against/alli/White+Noise.'>http://killwhore.com/with/alli/ROMANIAN-LEGION/against/alli/White Noise.</a>";
         echo "<br/>Shows kill involving the alliance ROMANIAN-LEGION against the alliance White Noise.</li></ul>";
         echo "</fieldset>";
         echo "</span>";
@@ -58,7 +58,7 @@ class FaqPage extends Page
         echo "<ul>";
         echo "<li><a href='http://squizz_caphinator.killwhore.com'>http://squizz_caphinator.killwhore.com</a> Kills for pilot Squizz Caphinator</li>";
         echo "<li><a href='http://woopatang.killwhore.com'>http://woopatang.killwhore.com</a> Kills for corporation Woopatang</li>";
-        echo "<li><a href='http://primary.dot.killwhore.com'>'http://primary.dot.killwhore.com</a> Kill for alliance Primary. (yes, I'm entertained by the dot too)</li>";
+        echo "<li><a href='http://duck.killwhore.com'>http://duck.killwhore.com</a> Kills for alliance Narwhals Ate My Duck.</li>";
         echo "</ul>";
         echo "</fieldset>";
         echo "<fieldset class='smallCorner'><legend class='smallCorner'>Basic rules for subdomains</legend>";
@@ -84,8 +84,8 @@ class FaqPage extends Page
         echo "<li>with - This filter states that all pilots, corps, alliances, and ships following are considered \"friendly.\"</li>";
         echo "<li>against - This term states that all pilots, corps, alliances, and ships following are considered \"hostile.\"</li>";
         echo "<li>system - Show kills within a certain solar system.  <br/>Example: <a href='http://killwhore.com/with/system/Madirmilire'>http://killwhore.com/with/system/Madirmilire</a></li>";
-        echo "<li>year, month, day - These terms allow you to filter to a certain year, month, or even day.  If any are ommitted the current year, month, or day is subsitited.</li>";
-        echo "<li>date - Like above, allows you to filter to a certain YYYYMMDD is an easier to read format.  <br/>Example: <a href='http://killwhore.com/date/20110527'>http://killwhore.com/date/20110527</a></li>";
+        echo "<li>year, month, day - These terms allow you to filter to a certain year, month, or even day.  If any are ommitted the current year, month, or day is substituted.</li>";
+        echo "<li>date - Like above, allows you to filter to a certain YYYYMMDD in an easier to read format.  <br/>Example: <a href='http://killwhore.com/date/20110527'>http://killwhore.com/date/20110527</a></li>";
         echo "<li>related - Typically used with system, will show you related kills to the killmail you are currently viewing.  Kills are considered related if they happened during the hour before, hour during, ";
         echo "or hour after of the specified time.  <br/>Example: <a href='http://killwhore.com/system/5-CQDA/related/2011052502'>http://killwhore.com/system/5-CQDA/related/2011052502</a></li>";
         echo "</ul></fieldset></span>";
