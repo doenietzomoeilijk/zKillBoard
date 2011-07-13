@@ -100,6 +100,8 @@ class SearchPage extends Page
 
     function viewRightPane($xml)
     {
+        global $subDomainEveID;
+
         echo "<span class='smallCorner menuSpan'><span class='title'>Navigation</span><span>";
 
         if (isset($this->context['nextMonth'])) displayTimeUrl($this->context['nextMonth']);
@@ -109,8 +111,10 @@ class SearchPage extends Page
 
         $newUrl = $this->p;
         if (!in_array("stats", $this->p)) $newUrl[] = "stats";
-        echo "<br/><a href='/" . implode("/", $newUrl) . "'>Statistics</a>";
 
+        if ($subDomainEveID != 0 || !in_array("related", $this->p)) {
+            echo "<br/><a href='/" . implode("/", $newUrl) . "'>Statistics</a>";
+        }
         echo "</span></span>";
 
         echo "<span class='leftRightSpacer'/>";
