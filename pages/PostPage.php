@@ -1,4 +1,5 @@
-<?
+<?php
+
 class PostPage extends Page
 {
 

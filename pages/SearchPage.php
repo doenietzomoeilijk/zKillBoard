@@ -1,4 +1,5 @@
-<?
+<?php
+
 class SearchPage extends Page
 {
     protected $isVictim = false;
