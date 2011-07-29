@@ -7,11 +7,9 @@ class Cron
         global $dbPrefix, $baseDir;
 
         // Create a cronlock table for non-blocking mutex equivalent.  yes, it is a hack but it works
-        Db::execute("create table if not exists cronlock (a int(8) primary key, dttm timestamp not null) engine memory");
+        Db::execute("create table if not exists cronlock (a varchar(32) primary key, dttm timestamp not null) engine memory");
         // Not likely to happen, but just in case. Removes stale locks
         Db::execute("delete from cronlock where dttm < date_add(now(), interval -1 hour)");
-        // An atomic operation at the database primary key level :)
-        if (Db::execute("insert into cronlock values (1, current_timestamp)", array(), false) === false) return;
 
         set_time_limit(0); // No timing out allowed here
 
@@ -26,12 +24,16 @@ class Cron
                 $cronInterval = $cronjob["cronInterval"];
 
                 if ($cronInterval < 60) {
-                    echo "CronID $cronID - A cronjob's cronInterval must be 60 or higher.  Will not execute this cron.\n";
+                    echo "CronID $cronID - A cronjob's cronInterval must be 60 or higher.  Will not execute this cron: $functionName\n";
                     continue;
                 }
 
+                // An atomic operation at the database primary key level :)
+                if (Db::execute("insert into cronlock values ('$functionName', current_timestamp)", array(), false) === false) continue;
+
                 try {
                     require_once("$baseDir/$fileName");
+                    Log::log("Cron Starting $functionName");
                     call_user_func($functionName);
 
                     // Successful execution!
@@ -45,13 +47,17 @@ class Cron
                     Db::execute("update {$dbPrefix}cronjobs set lastExecution = (unix_timestamp() - cronInterval + :nextExecution) where cronID = :cronID",
                                 array(":cronID" => $cronID, ":nextExecution" => $nextExecution));
                 }
+
+                // Removes the cron lock
+                Db::execute("delete from cronlock where a = '$functionName'");
+
+
+                Log::log("Cron Finished: $functionName");
+                return;
             }
         } catch (Exception $ex) {
             $error = $ex;
         }
-
-        // Removes the cron lock
-        Db::execute("truncate cronlock");
 
         if ($error != null) throw $error;
     }
