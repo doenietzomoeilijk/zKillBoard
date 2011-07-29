@@ -24,7 +24,7 @@ function getKills(&$context, $isVictim, $additionalWhere = null, $limit = 10)
     foreach ($results as $result) {
         $kills[] = $result['killID'];
     }
-    return getKillInfo($kills);
+    return getKillInfo($kills, $query["year"], $query["month"]);
 }
 
 
@@ -52,7 +52,7 @@ function getQuery(&$context, $isVictim, $additionalWhere = null, $limit = 10)
     $query .= " order by kills.killID $orderBy";
     if ($limit != -1) $query .= " limit $limit";
 
-    return array("query" => $query, "parameters" => $queryParameters);
+    return array("query" => $query, "parameters" => $queryParameters, "year" => $queryInfo["year"], "month" => $queryInfo["month"]);
 }
 
 /**
@@ -268,34 +268,37 @@ function buildQuery(&$context, $isVictim, $additionalWhere = null, $limit = 10)
         }
     }
 
-    addSubQuery($tables, $whereClauses, $pilots, $queryParameters, "characterID", ":charID");
-    addSubQuery($tables, $whereClauses, $corps, $queryParameters, "corporationID", ":corpID");
-    addSubQuery($tables, $whereClauses, $allis, $queryParameters, "allianceID", ":alliID");
-    addSubQuery($tables, $whereClauses, $ships, $queryParameters, "shipTypeID", ":shipID");
+    if (!$specificMail) {
+        // Add year and month
+        if ($year == null) $year = date("Y");
+        if ($month == null) $month = date("n");
+        //$whereClauses[] = "kills.year = :year";
+        //$whereClauses[] = "kills.month = :month";
+        //$queryParameters[":year"] = $year;
+        //$queryParameters[":month"] = $month;
+        $context['searchYear'] = $year;
+        $context['searchMonth'] = $month;
+    }
+
+    $month = strlen("$month") < 2 ? "0$month" : $month;
+    Tables::ensureTableExist($year, $month);
+
+    addSubQuery($tables, $whereClauses, $pilots, $queryParameters, "characterID", ":charID", $year, $month);
+    addSubQuery($tables, $whereClauses, $corps, $queryParameters, "corporationID", ":corpID", $year, $month);
+    addSubQuery($tables, $whereClauses, $allis, $queryParameters, "allianceID", ":alliID", $year, $month);
+    addSubQuery($tables, $whereClauses, $ships, $queryParameters, "shipTypeID", ":shipID", $year, $month);
 
     $whereClauses[] = "isVictim = :victim";
     $queryParameters[":victim"] = $isVictim ? "T" : "F";
 
     if ($additionalWhere != null) $whereClauses[] = $additionalWhere;
 
-    if (!$specificMail) {
-        // Add year and month
-        if ($year == null) $year = date("Y");
-        if ($month == null) $month = date("n");
-        $whereClauses[] = "kills.year = :year";
-        $whereClauses[] = "kills.month = :month";
-        $queryParameters[":year"] = $year;
-        $queryParameters[":month"] = $month;
-        $context['searchYear'] = $year;
-        $context['searchMonth'] = $month;
-    }
-
     if (isset($context['searchYear']) || isset($context['searchMonth']) || isset($context['searchDay'])) {
         $months = array("Jan.", "Feb.", "March", "April", "May", "June",
                         "July", "Aug.", "Sep.", "Oct.", "Nov.", "Dec.");
-        $month = isset($context['searchMonth']) ? $months[$context['searchMonth'] - 1] . ", " : "";
+        $monthName = isset($context['searchMonth']) ? $months[$context['searchMonth'] - 1] . ", " : "";
         $day = isset($context['searchDay']) ? " " . $context['searchDay'] : "";
-        $context['SearchParameters'][] = " $month$day $year ";
+        $context['SearchParameters'][] = " $monthName$day $year ";
     }
 
     $orderBy = isset($whereClauses["orderBy"]) ? $whereClauses["orderBy"] : "desc";
@@ -304,9 +307,9 @@ function buildQuery(&$context, $isVictim, $additionalWhere = null, $limit = 10)
     $limit = isset($whereClauses["limit"]) ? $whereClauses["limit"] : $limit;
     unset($whereClauses["limit"]);
 
-    $tables[] = "{$dbPrefix}kills kills left join {$dbPrefix}participants joined on (joined.killID = kills0.killID)";
+    $tables[] = "{$dbPrefix}kills_{$year}_{$month} kills left join {$dbPrefix}participants_{$year}_{$month} joined on (joined.killID = kills.killID)";
 
-    $retValue = array("tables" => $tables, "whereClauses" => $whereClauses, "orderBy" => $orderBy, "parameters" => $queryParameters, "limit" => $limit);
+    $retValue = array("tables" => $tables, "whereClauses" => $whereClauses, "orderBy" => $orderBy, "parameters" => $queryParameters, "limit" => $limit, "year" => $year, "month" => $month);
     Bin::set($queryKey, $retValue);
     return $retValue;
 }
@@ -324,7 +327,7 @@ function buildQuery(&$context, $isVictim, $additionalWhere = null, $limit = 10)
  * @param  $shortHand
  * @return void
  */
-function addSubQuery(&$tables, &$whereClauses, &$values, &$queryParameters, $column, $shortHand)
+function addSubQuery(&$tables, &$whereClauses, &$values, &$queryParameters, $column, $shortHand, $year, $month)
 {
     global $dbPrefix, $p;
 
@@ -335,8 +338,8 @@ function addSubQuery(&$tables, &$whereClauses, &$values, &$queryParameters, $col
         $tCount = sizeof($tables);
         $finalBlow = in_array("finalBlow", $p);
         $finalBlow = $finalBlow ? " and finalBlow = 1 " : "";
-        $tables[] = "(select distinct kills.killID from {$dbPrefix}participants joined, {$dbPrefix}kills kills
-						where kills.killID = joined.killID and $column = $shortHand$indexCount $finalBlow and isVictim $victimMatch :victim and kills.year = :year and kills.month = :month) as t$tCount";
+        $tables[] = "(select distinct kills.killID from {$dbPrefix}participants_{$year}_{$month} joined, {$dbPrefix}kills_{$year}_{$month} kills
+						where kills.killID = joined.killID and $column = $shortHand$indexCount $finalBlow and isVictim $victimMatch :victim) as t$tCount";
         $whereClauses[] = "kills.killID = t$tCount.killID";
         $queryParameters["$shortHand$indexCount"] = $value;
         $indexCount++;
@@ -350,7 +353,7 @@ function addSubQuery(&$tables, &$whereClauses, &$values, &$queryParameters, $col
  * @param  $killIds
  * @return array
  */
-function getKillInfo($killIds)
+function getKillInfo($killIds, $year, $month)
 {
     if (sizeof($killIds) == 0) return array();
 
@@ -366,8 +369,8 @@ function getKillInfo($killIds)
     $attackers = array();
     $imploded = implode(",", $killIds);
 
-    $killDetail = Db::query("select * from {$dbPrefix}kills where killID in ($imploded) order by killID desc", array(), 3600);
-    $involved = Db::query("select * from {$dbPrefix}participants where killID in ($imploded) and (isVictim = 'T' or finalBlow = '1')", array(), 3600);
+    $killDetail = Db::query("select * from {$dbPrefix}kills_{$year}_{$month} where killID in ($imploded) order by killID desc", array(), 3600);
+    $involved = Db::query("select * from {$dbPrefix}participants_{$year}_{$month} where killID in ($imploded) and (isVictim = 'T' or finalBlow = '1')", array(), 3600);
     foreach ($involved as $pilot) {
         if ($pilot['isVictim'] == "T") $victims[] = $pilot;
         else if ($pilot['finalBlow'] == 1) $attackers[] = $pilot;
@@ -407,10 +410,16 @@ function getKillDetail($killID)
 {
     global $dbPrefix;
 
-    $killDetail = Db::queryRow("select * from {$dbPrefix}kills where killID = :killID", array(":killID" => $killID));
-    $victim = Db::queryRow("select * from {$dbPrefix}participants where isVictim = 'T' and killID = :killID", array(":killID" => $killID));
-    $attackers = Db::query("select * from {$dbPrefix}participants where isVictim = 'F' and  killID = :killID order by damage desc", array(":killID" => $killID));
-    $items = Db::query("select * from {$dbPrefix}items where killID = :killID order by insertOrder", array(":killID" => $killID));
+    $yearMonth = Db::queryRow("select year, month from {$dbPrefix}killmail where killID = :killID", array(":killID" => $killID));
+    if (sizeof($yearMonth) == 0) throw new Exception("Invalid killmail id");
+    $year = $yearMonth["year"];
+    $month = $yearMonth["month"];
+    $month = strlen("$month") < 2 ? "0$month" : $month;
+
+    $killDetail = Db::queryRow("select * from {$dbPrefix}kills_{$year}_{$month} where killID = :killID", array(":killID" => $killID));
+    $victim = Db::queryRow("select * from {$dbPrefix}participants_{$year}_{$month} where isVictim = 'T' and killID = :killID", array(":killID" => $killID));
+    $attackers = Db::query("select * from {$dbPrefix}participants_{$year}_{$month} where isVictim = 'F' and  killID = :killID order by damage desc", array(":killID" => $killID));
+    $items = Db::query("select * from {$dbPrefix}items_{$year}_{$month} where killID = :killID order by insertOrder", array(":killID" => $killID));
 
     return array(
         "killID" => $killID,
@@ -597,7 +606,7 @@ function getStatistics($context, $type, $eveID)
 
     // See if we already have this query in the statistics table
     $statsQuery = "select uncompress(result) result from {$dbPrefix}cache where type = 'stat' and year = :year and month = :month and query = :hash and eve_id = :eveID";
-    $statsParameters = array(":year" => $parameters[":year"], ":month" => $parameters[":month"], ":eveID" => $eveID, ":hash" => $hash);
+    $statsParameters = array(":year" => $builtQuery["year"], ":month" => $builtQuery["month"], ":eveID" => $eveID, ":hash" => $hash);
     $statistics = Db::queryField($statsQuery, "result", $statsParameters, 120);
 
     if ($statistics == null) {
@@ -625,7 +634,7 @@ function getStatistics($context, $type, $eveID)
 
         $json = json_encode($statistics);
         Db::execute("replace into {$dbPrefix}cache (eve_id, type, year, month, query, result) values (:eveID, 'stat', :year, :month, :hash, compress(:result))",
-                    array(":year" => $parameters[":year"], ":month" => $parameters[":month"], ":eveID" => $eveID, ":hash" => $hash, ":result" => $json));
+                    array(":year" => $builtQuery["year"], ":month" => $builtQuery["month"], ":eveID" => $eveID, ":hash" => $hash, ":result" => $json));
         $key = Db::getKey($statsQuery, $statsParameters);
         Memcached::delete($key);
     } else {

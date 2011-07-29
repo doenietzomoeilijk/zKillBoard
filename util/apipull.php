@@ -91,7 +91,8 @@ function handleApiException($user_id, $char_id, $exception)
     }
 }
 
-function doApiSummary() {
+function doApiSummary()
+{
     global $dbPrefix;
 
     $charKills = Db::queryField("select contents count from {$dbPrefix}storage where locker = 'charKillsProcessed'", "count");
@@ -126,6 +127,8 @@ function doPopulateCharactersTable($user_id = null)
         $user_id = $apiKey['user_id'];
         $api_key = $apiKey['api_key'];
 
+        Db::execute("update {$dbPrefix}api set error_code = 0, lastValidation = now() where user_id = :user_id", array(":user_id" => $user_id));
+
         $totalKeys++;
         $pheal = new Pheal($user_id, $api_key);
         try {
@@ -137,7 +140,6 @@ function doPopulateCharactersTable($user_id = null)
         }
         $apiCount++;
         // Clear the error code
-        Db::execute("update {$dbPrefix}api set error_code = 0, lastValidation = now() where user_id = :user_id", array(":user_id" => $user_id));
         $characterIDs = array();
         $pheal->scope = 'char';
         foreach ($characters->characters as $character) {
@@ -360,7 +362,7 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
     $ids = implode(",", $allKillIds);
     Db::execute("create temporary table {$dbPrefix}kills_temp (killID int(16) primary key ) engine = memory");
     Db::execute("insert into {$dbPrefix}kills_temp values $ids");
-    $result = Db::query("select temp.killID from {$dbPrefix}kills_temp temp left join {$dbPrefix}kills as kills on temp.killID = kills.killID where kills.killID is null",
+    $result = Db::query("select temp.killID from {$dbPrefix}kills_temp temp left join {$dbPrefix}killmail as kills on temp.killID = kills.killID where kills.killID is null",
                         array(), 0);
     Db::execute("drop temporary table {$dbPrefix}kills_temp");
 
@@ -382,31 +384,29 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
         // Do some validation on the kill
         if (!validKill($kill)) continue;
 
+        Log::log("Adding for parse killID $killID");
         $json = json_encode($kill->toArray());
         Db::execute("insert into {$dbPrefix}killmail (killID, kill_json) values (:killID, :json) on duplicate key update kill_json = :json",
                     array(":killID" => $killID, ":json" => $json));
 
-        $totalCost = 0;
-        $itemInsertOrder = 0;
-        foreach ($kill->items as $item) $totalCost += processItem($killID, $item, $itemInsertOrder++);
-        $totalCost += processVictim($killID, $kill->victim);
-        foreach ($kill->attackers as $attacker) processAttacker($killID, $attacker);
-        processKill($kill, false, sizeof($kill->attackers), $totalCost);
         $killsParsedAndAdded++;
-        if ($killsParsedAndAdded % 100 == 0) Log::irc("$killsParsedAndAdded parsed thus far in this run...");
-    }
-    try {
-        // Backtrack for more kills/losses
-        if ($minKillID != -1) $killsParsedAndAdded += processApiKills($userID, $userKey, $charID, $scope, $minKillID);
-    } catch (Exception $ex) {
-        // Kills exhausted or some other problem
-    }
+        continue;
 
-    // Set ship groupIDs for the kills just processed
-    Db::execute("update {$dbPrefix}participants p,invTypes i set p.groupID = i.groupID where i.groupID is null and i.typeID = p.shipTypeID");
+        try {
+            $totalCost = 0;
+            $itemInsertOrder = 0;
+            foreach ($kill->items as $item) $totalCost += processItem($kill, $killID, $item, $itemInsertOrder++);
+            $totalCost += processVictim($kill, $killID, $kill->victim);
+            foreach ($kill->attackers as $attacker) processAttacker($kill, $killID, $attacker);
+            processKill($kill, false, sizeof($kill->attackers), $totalCost);
+            $killsParsedAndAdded++;
+            Log::log("Processed killID $killID");
+        } catch (Exception $exc) {
+            print_r($exc);
+        }
+    }
 
     if ($killsParsedAndAdded > 0) {
-        Db::execute("update {$dbPrefix}participants p, invTypes i set p.groupID = i.groupID where p.shipTypeID = i.typeID and p.groupID is null");
         Db::execute("truncate {$dbPrefix}cache");
     }
 
@@ -452,8 +452,11 @@ function processKill(&$kill, $npcOnly, $number_involved, $totalCost)
     $day = date("d", $date);
     $unix = date("U", $date);
 
+    $month = strlen("$month") < 2 ? "0$month" : $month;
+    Tables::ensureTableExist($year, $month);
+
     Db::execute("
-		insert into {$dbPrefix}kills
+		replace into {$dbPrefix}kills_{$year}_{$month}
 			(killID, solarSystemID, killTime, moonID, year, month, week, day,
 				unix_timestamp, npcOnly, number_involved, total_price, processed_timestamp)
 		values
@@ -476,14 +479,23 @@ function processKill(&$kill, $npcOnly, $number_involved, $totalCost)
     Memcached::set("LAST_KILLMAIL_PROCESSED", $unix);
 }
 
-function processVictim($killID, &$victim)
+function processVictim(&$kill, $killID, &$victim)
 {
     global $dbPrefix;
+
+    $date = $kill->killTime;
+
+    $date = strtotime($date);
+    $year = date("Y", $date);
+    $month = date("m", $date);
+
+    $month = strlen("$month") < 2 ? "0$month" : $month;
+    Tables::ensureTableExist($year, $month);
 
     $shipPrice = Price::getItemPrice($victim->shipTypeID);
 
     Db::execute("
-		insert into {$dbPrefix}participants
+		insert into {$dbPrefix}participants_{$year}_{$month}
 			(killID, isVictim, shipTypeID, shipPrice, damage, factionName, factionID, allianceName, allianceID,
 			corporationName, corporationID, characterName, characterID)
 		values
@@ -520,12 +532,21 @@ function processVictim($killID, &$victim)
     return $shipPrice;
 }
 
-function processAttacker(&$killID, &$attacker)
+function processAttacker(&$kill, &$killID, &$attacker)
 {
     global $dbPrefix;
 
+    $date = $kill->killTime;
+
+    $date = strtotime($date);
+    $year = date("Y", $date);
+    $month = date("m", $date);
+
+    $month = strlen("$month") < 2 ? "0$month" : $month;
+    Tables::ensureTableExist($year, $month);
+
     Db::execute("
-		insert into {$dbPrefix}participants
+		insert into {$dbPrefix}participants_{$year}_{$month}
 			(killID, isVictim, characterID, characterName, corporationID, corporationName, allianceID, allianceName,
 			 factionID, factionName, securityStatus, damage, finalBlow, weaponTypeID, shipTypeID)
 		values
@@ -561,14 +582,23 @@ function processAttacker(&$killID, &$attacker)
          ));*/
 }
 
-function processItem(&$killID, &$item, $itemInsertOrder)
+function processItem(&$kill, &$killID, &$item, $itemInsertOrder)
 {
     global $dbPrefix;
+
+    $date = $kill->killTime;
+
+    $date = strtotime($date);
+    $year = date("Y", $date);
+    $month = date("m", $date);
+
+    $month = strlen("$month") < 2 ? "0$month" : $month;
+    Tables::ensureTableExist($year, $month);
 
     $price = Price::getItemPrice($item->typeID);
 
     Db::execute("
-		insert into {$dbPrefix}items
+		insert into {$dbPrefix}items_{$year}_{$month}
 			(killID, typeID, flag, qtyDropped, qtyDestroyed, insertOrder, price)
 		values
 			(:killID, :typeID, :flag, :qtyDropped, :qtyDestroyed, :insertOrder, :price)
