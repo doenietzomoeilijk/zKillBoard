@@ -14,7 +14,8 @@ function handleApiException($user_id, $char_id, $exception)
 
     $code = $exception->getCode();
     $message = $exception->getMessage();
-    $clearCharacters = false;
+    $clearCharacter = false;
+    $clearAllCharacters = false;
     $clearApiEntry = false;
     $updateCacheTime = false;
     $demoteCharacter = false;
@@ -26,13 +27,21 @@ function handleApiException($user_id, $char_id, $exception)
             $updateCacheTime = true;
             break;
         case 200: // Current security level not high enough.
+            // Typically happens when a key isn't a full API Key
+            $clearApiEntry = true;
+            $code = 203; // Force it to go away, no point in keeping this key
+            break;
+        case 201: // Character does not belong to account.
+            // Typically caused by a character transfer
+            $clearCharacter = true;
+            break;
         case 207: // Not available for NPC corporations.
         case 209:
             $demoteCharacter = true;
             break;
         case 211: // Login denied by account status
             // Remove characters, will revalidate with next doPopulate
-            $clearCharacters = true;
+            $clearAllCharacters = true;
             $clearApiEntry = true;
             break;
         case 202: // API key authentication failure.
@@ -41,7 +50,7 @@ function handleApiException($user_id, $char_id, $exception)
         case 205: // Authentication failure (final pass).
         case 210: // Authentication failure.
         case 521: // Invalid username and/or password passed to UserData.LoginWebUser().
-            $clearCharacters = true;
+            $clearAllCharacters = true;
             $clearApiEntry = true;
             break;
         case 0: // API Date could not be read / parsed, original exception (Something is wrong with the XML and it couldn't be parsed)
@@ -55,6 +64,7 @@ function handleApiException($user_id, $char_id, $exception)
         default:
             echo "Unhandled error - Code $code - $message";
             $updateCacheTime = true;
+            $clearApiEntry = true;
             $cacheUntil = time() + 3600;
     }
 
@@ -63,7 +73,11 @@ function handleApiException($user_id, $char_id, $exception)
                     array(":char_id" => $char_id));
     }
 
-    if ($clearCharacters) {
+    if ($clearCharacter && $char_id != 0) {
+        Db::execute("delete from {$dbPrefix}api_characters where user_id = :user_id and characterID = :char_id", array(":user_id" => $user_id, ":char_id" => $char_id));
+    }
+
+    if ($clearAllCharacters) {
         Db::execute("delete from {$dbPrefix}api_characters where user_id = :user_id", array(":user_id" => $user_id));
     }
 
@@ -93,15 +107,15 @@ function doPopulateCharactersTable($user_id = null)
     global $dbPrefix;
 
     $specificUserID = $user_id != null;
-    if ($user_id == null) Log::irc("Repopulating character API table.");
-    else Log::irc("Populating characters for a specific user_id.");
+    //if ($user_id == null) Log::irc("Repopulating character API table.");
+    //else Log::irc("Populating characters for a specific user_id.");
     $apiCount = 0;
     $totalKeys = 0;
     $numErrrors = 0;
     $directorCount = 0;
     $characterCount = 0;
 
-    if ($user_id == null) $apiKeys = Db::query("select * from {$dbPrefix}api where error_code != 203");
+    if ($user_id == null) $apiKeys = Db::query("select * from {$dbPrefix}api where error_code != 203 order by lastValidation limit 25", array(), 0);
     else $apiKeys = Db::query("select * from {$dbPrefix}api where user_id = :user_id", array(":user_id" => $user_id));
 
     foreach ($apiKeys as $apiKey) {
@@ -120,7 +134,7 @@ function doPopulateCharactersTable($user_id = null)
         }
         $apiCount++;
         // Clear the error code
-        Db::execute("update {$dbPrefix}api set error_code = 0 where user_id = :user_id", array(":user_id" => $user_id));
+        Db::execute("update {$dbPrefix}api set error_code = 0, lastValidation = now() where user_id = :user_id", array(":user_id" => $user_id));
         $characterIDs = array();
         $pheal->scope = 'char';
         foreach ($characters->characters as $character) {
@@ -152,17 +166,10 @@ function doPopulateCharactersTable($user_id = null)
                          array(":userID" => $user_id));
     }
 
-    if ($numErrrors != 0) Log::irc("$numErrrors of $totalKeys API pulls results in an error.");
-    if ($numErrrors >= ($totalKeys / 2)) {
-        // Server issues?
-        Log::irc("Error threshold exceeded, will retry again later.");
-        throw new Exception("API problems, try again later.", 0);
-    }
-
     $apiCount = number_format($apiCount, 0);
     $directorCount = number_format($directorCount, 0);
     $characterCount = number_format($characterCount, 0);
-    if (!$specificUserID) Log::irc("Character API tables repopulated - $apiCount keys, $directorCount Corp CEO/Directors, $characterCount Characters");
+    if (!$specificUserID) Log::irc("$apiCount keys revalidated: $directorCount Corp CEO/Directors, $characterCount Characters, and $numErrrors invalid keys.");
     else Log::irc("Specific user_id brought in " . pluralize($directorCount, "Corp CEO/Director")
                   . " and " . pluralize($characterCount, "Character"));
 }
@@ -172,7 +179,7 @@ function doPullCharKills()
     global $dbPrefix;
     $numKillsProcessed = 0;
 
-    $apiList = Db::query("select api.user_id, api_key, characterID from {$dbPrefix}api api, {$dbPrefix}api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'F' and cachedUntil < unix_timestamp()", array(), 0);
+    $apiList = Db::query("select api.user_id, api_key, characterID from {$dbPrefix}api api, {$dbPrefix}api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'F' and cachedUntil < unix_timestamp() order by cachedUntil limit 50", array(), 0);
 
     foreach ($apiList as $api) {
         $user_id = $api['user_id'];
@@ -210,7 +217,7 @@ function doPullPrivateKillsforDirectors()
     global $dbPrefix;
     $numKillsProcessed = 0;
 
-    $apiList = Db::query("select api.user_id, api_key, characterID from {$dbPrefix}api api, {$dbPrefix}api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'T'", array(), 0);
+    $apiList = Db::query("select api.user_id, api_key, characterID from {$dbPrefix}api api, {$dbPrefix}api_characters chars where api.user_id = chars.user_id and error_code = 0 and isDirector = 'T' order by cachedUntil limit 50", array(), 0);
 
     foreach ($apiList as $api) {
         $user_id = $api['user_id'];
@@ -383,6 +390,7 @@ function processApiKills($userID, $userKey, $charID, $scope = "corp", $minKillID
         foreach ($kill->attackers as $attacker) processAttacker($killID, $attacker);
         processKill($kill, false, sizeof($kill->attackers), $totalCost);
         $killsParsedAndAdded++;
+        if ($killsParsedAndAdded % 100 == 0) Log::irc("$killsParsedAndAdded parsed thus far in this run...");
     }
     try {
         // Backtrack for more kills/losses
