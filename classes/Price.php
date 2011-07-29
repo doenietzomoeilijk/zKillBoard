@@ -33,7 +33,7 @@ class Price
     {
         global $dbPrefix;
 
-        $price = Db::queryField("select price from {$dbPrefix}prices where typeID = :typeID and unix_timestamp() < expires", "price",
+        $price = Db::queryField("select price from {$dbPrefix}prices where typeID = :typeID", "price",
                                 array(":typeID" => $typeID));
         if ($price != null) return $price;
         return 0;
