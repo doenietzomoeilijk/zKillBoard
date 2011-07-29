@@ -304,7 +304,7 @@ function buildQuery(&$context, $isVictim, $additionalWhere = null, $limit = 10)
     $limit = isset($whereClauses["limit"]) ? $whereClauses["limit"] : $limit;
     unset($whereClauses["limit"]);
 
-    $tables[] = "{$dbPrefix}kills kills left join {$dbPrefix}participants joined on (kills.killID = joined.killID)";
+    $tables[] = "{$dbPrefix}kills kills left join {$dbPrefix}participants joined on (joined.killID = kills0.killID)";
 
     $retValue = array("tables" => $tables, "whereClauses" => $whereClauses, "orderBy" => $orderBy, "parameters" => $queryParameters, "limit" => $limit);
     Bin::set($queryKey, $retValue);
@@ -513,13 +513,13 @@ function topDogs(&$context, $type, $isVictim = false, $limit = 5)
     $queryParameters = $queryInfo["parameters"];
 
     // TODO Look into optimizing this query
-    $query = "	select * from ( select $typeID, count(distinct kills.killID) count
+    $query = "select distinct $typeID, count(distinct kills.killID) count
 				from " . implode(", ", $tables) . "
 				where " . implode(" and ", $whereClauses) . "
-				group by 1 ) as topRows order by count desc";
+				group by $typeID order by count desc";
     if ($limit > 0) $query .= " limit " . ($limit + 1);
 
-    $result = Db::query($query, $queryParameters, 120);
+    $result = Db::query($query, $queryParameters, 900);
     return $result;
 }
 
