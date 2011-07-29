@@ -168,15 +168,21 @@ function buildQuery(&$context, $isVictim, $additionalWhere = null, $limit = 10)
                 $queryParameters[":killID"] = $value;
             case "pilot":
                 $context['SearchParameters']["$value"] = "P:$value";
+                $pilotID = Info::getEveID($value);
+                if ($pilotID == null) throw new Exception("$value is an unknown pilot.");
                 $pilots[Info::getEveID($value)] = $coalition;
                 break;
             case "corp":
                 $context['SearchParameters']["$value"] = "C:$value";
-                $corps[Info::getEveID($value)] = $coalition;
+                $corpID = Info::getEveID($value);
+                if ($corpID == null) throw new Exception("$value is an unknown corporation.");
+                $corps[$corpID] = $coalition;
                 break;
             case "alli":
                 $context['SearchParameters']["$value"] = "A:$value";
-                $allis[Info::getEveID($value)] = $coalition;
+                $alliID = Info::getEveID($value);
+                if ($alliID == null) throw new Exception("$value is an unknown alliance.");
+                $allis[$alliID] = $coalition;
                 break;
             case "ship":
                 $itemID = Info::getItemID($value);
@@ -629,8 +635,9 @@ function getStatistics($context, $type, $eveID)
     return $statistics;
 }
 
-function statsMerge(&$statistics, &$statArray, $col1, $col2) {
-    foreach($statArray as $stat) {
+function statsMerge(&$statistics, &$statArray, $col1, $col2)
+{
+    foreach ($statArray as $stat) {
         $key = $stat['year'] . "|" . $stat['month'] . "|" . $stat['groupID'];
         if (!isset($statistics[$key])) $statistics[$key] = array();
         $statistics[$key]["year"] = $stat["year"];
