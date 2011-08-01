@@ -91,6 +91,62 @@ function handleApiException($user_id, $char_id, $exception)
     }
 }
 
+/**
+ * Processes unprocessed kills 200 at a time.
+ *
+ *
+ * @return void
+ */
+function parseKills()
+{
+    global $dbPrefix;
+
+    $timer = new Timer();
+
+    // Cronjobs expire at 1 hour, so we'll run for 59 minutes and then let cron restart
+    $maxTime = 60 * 59 * 1000;
+
+    while ($timer->stop() < $maxTime) {
+        $yearMonths = array();
+        $result = Db::query("select * from ${dbPrefix}killmail where processed = false limit 200", array(), 0);
+
+        foreach ($result as $row) {
+            $kill = json_decode($row['kill_json']);
+            $killID = $kill->killID;
+
+            $date = $kill->killTime;
+
+            $date = strtotime($date);
+            $year = date("Y", $date);
+            $month = date("m", $date);
+
+            // Do some validation on the kill
+            if (!validKill($kill)) continue;
+
+            $totalCost = 0;
+            $itemInsertOrder = 0;
+            foreach ($kill->items as $item) $totalCost += processItem($kill, $killID, $item, $itemInsertOrder++);
+            $totalCost += processVictim($kill, $killID, $kill->victim);
+            foreach ($kill->attackers as $attacker) processAttacker($kill, $killID, $attacker);
+            processKill($kill, false, sizeof($kill->attackers), $totalCost);
+            Log::log("Processed killID $killID");
+            Db::execute("update {$dbPrefix}killmail set processed = 1, year = $year, month = $month where killID = $killID");
+            if (!isset($yearMonths[$year])) $yearMonths[$year] = array();
+            $yearMonths[$year][$month] = true;
+            usleep(100);
+        }
+
+
+        foreach ($yearMonths as $year => $monthArray) {
+            foreach ($monthArray as $month => $value) {
+                Db::execute("update {$dbPrefix}participants_{$year}_{$month} p,invTypes i set p.groupID = i.groupID where i.groupID is null and i.typeID = p.shipTypeID");
+                Db::execute("update {$dbPrefix}participants_{$year}_{$month} p, invTypes i set p.groupID = i.groupID where p.shipTypeID = i.typeID and p.groupID is null");
+            }
+        }
+        sleep(30);
+    }
+}
+
 function doApiSummary()
 {
     global $dbPrefix;
@@ -181,7 +237,7 @@ function doPopulateCharactersTable($user_id = null)
     $characterCount = number_format($characterCount, 0);
     //if (!$specificUserID) Log::irc("$apiCount keys revalidated: $directorCount Corp CEO/Directors, $characterCount Characters, and $numErrrors invalid keys.");
     if ($specificUserID) Log::irc("Specific user_id brought in " . pluralize($directorCount, "Corp CEO/Director")
-                  . " and " . pluralize($characterCount, "Character"));
+                                  . " and " . pluralize($characterCount, "Character"));
 }
 
 function doPullCharKills()
