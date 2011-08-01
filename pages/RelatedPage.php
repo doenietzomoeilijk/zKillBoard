@@ -7,7 +7,9 @@ class RelatedPage extends SearchPage
 
     function controllerMidPane()
     {
+        global $context;
         parent::controllerMidPane();
+        getQuery($context, false);
 
         $kills = isset($this->context['display_kills']) ? $this->context['display_kills'] : array();
         $losses = isset($this->context['display_losses']) ? $this->context['display_losses'] : array();
@@ -118,7 +120,7 @@ class RelatedPage extends SearchPage
 
     protected function hashPilots($kills, &$hostiles, &$friendlies)
     {
-        global $dbPrefix;
+        global $dbPrefix, $context;
 
         asort($kills);
 
@@ -131,7 +133,10 @@ class RelatedPage extends SearchPage
                 $attacker = $kill['attacker'];
                 $this->addRelatedPilot($friendlies, $kill, $attacker);
             } else {
-                $attackers = Db::query("select * from {$dbPrefix}participants where killID = :killID and isVictim = 'F'",
+                $year = $context['searchYear'];
+                $month = $context['searchMonth'];
+                $month = strlen("$month") < 2 ? "0$month" : $month;
+                $attackers = Db::query("select * from {$dbPrefix}participants_{$year}_{$month} where killID = :killID and isVictim = 'F'",
                                        array(":killID" => $killID), 3600);
                 foreach ($attackers as $attacker) {
                     $this->addRelatedPilot($friendlies, $kill, $attacker);
