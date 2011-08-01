@@ -94,6 +94,10 @@ class FaqPage extends Page
         echo "<span class='answer'><img src='http://image.zzeve.com/Character/1633218082_64.jpg'/>&nbsp;&nbsp;&nbsp;I am <a href='http://squizz_caphinator.killwhore.com'>Squizz Caphinator</a>.  ";
         echo "I love to shoot stuff :)<br/><br/><img src='http://zzeve.com/sigs/SquizzSigEveO.png'/></span>";
 
+        echo "<span class='question'>Is anyone helping you?</span>";
+        echo "<span class='answer'><img src='http://image.zzeve.com/Character/998613753_64.jpg'/>&nbsp;&nbsp;&nbsp;<a href='http://section58.killwhore.com'>Section58</a>.";
+        echo "<br/><br/>Section58 is assisting with front end design and will probably toss out everything I've already done and make it prettier!</span>";
+
         echo "</span>"; // faq
     }
 }
