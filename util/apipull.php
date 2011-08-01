@@ -99,8 +99,13 @@ function doApiSummary()
     $corpKills = Db::queryField("select contents count from {$dbPrefix}storage where locker = 'corpKillsProcessed'", "count");
     Db::execute("delete from {$dbPrefix}storage where locker in ('charKillsProcessed', 'corpKillsProcessed')");
 
-    if ($charKills != null && $charKills > 0) Log::irc(pluralize($charKills, "Kill") . " total pulled from Character Keys in the last 60 minutes.");
-    if ($corpKills != null && $corpKills > 0) Log::irc(pluralize($corpKills, "Kill") . " total pulled from Corporation Keys in the last 60 minutes.");
+    $charKills = $charKills == null ? 0 : $charKills;
+    $corpKills = $corpKills == null ? 0 : $corpKills;
+    $totalKills = $charKills + $corpKills;
+
+    //if ($charKills != null && $charKills > 0) Log::irc(pluralize($charKills, "Kill") . " total pulled from Character Keys in the last 60 minutes.");
+    //if ($corpKills != null && $corpKills > 0) Log::irc(pluralize($corpKills, "Kill") . " total pulled from Corporation Keys in the last 60 minutes.");
+    Log::irc(pluralize($totalKills, "Kill") . " total pulled from keys in the last 60 minutes.");
 }
 
 function doPopulateCharactersTable($user_id = null)
@@ -174,8 +179,8 @@ function doPopulateCharactersTable($user_id = null)
     $apiCount = number_format($apiCount, 0);
     $directorCount = number_format($directorCount, 0);
     $characterCount = number_format($characterCount, 0);
-    if (!$specificUserID) Log::irc("$apiCount keys revalidated: $directorCount Corp CEO/Directors, $characterCount Characters, and $numErrrors invalid keys.");
-    else Log::irc("Specific user_id brought in " . pluralize($directorCount, "Corp CEO/Director")
+    //if (!$specificUserID) Log::irc("$apiCount keys revalidated: $directorCount Corp CEO/Directors, $characterCount Characters, and $numErrrors invalid keys.");
+    if ($specificUserID) Log::irc("Specific user_id brought in " . pluralize($directorCount, "Corp CEO/Director")
                   . " and " . pluralize($characterCount, "Character"));
 }
 
