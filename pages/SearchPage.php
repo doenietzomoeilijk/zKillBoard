@@ -32,23 +32,32 @@ class SearchPage extends Page
 
         $year = isset($this->context['searchYear']) ? $this->context['searchYear'] : date("Y");
         $month = isset($this->context['searchMonth']) ? $this->context['searchMonth'] : date("n");
+        $month = strlen("$month") < 2 ? "0$month" : $month;
         $day = isset($this->context['searchDay']) ? $this->context['searchDay'] : null;
 
         if ($day == null) {
-            $nextMonthTime = mktime(0, 0, 0, $month + 1, 1, $year, 0);
-            $nextMonth = Db::queryRow("select year, month from {$dbPrefix}kills where unix_timestamp >= :time order by unix_timestamp limit 1",
-                                      array(":time" => $nextMonthTime), 3600);
+            $nextYear = $year;
+            $nextMonth = $month + 1;
+            if ($nextMonth > 12) {
+                $nextMonth = 1;
+                $nextYear++;
+            }
+            if ($nextYear <= $year && $nextMonth <= $month) $this->context['nextMonth'] = array("year" => $nextYear, "month" => $nextMonth);
 
-            $prevMonthTime = mktime(0, 0, 0, $month, 1, $year, 0);
-            $prevMonth = Db::queryRow("select year, month from {$dbPrefix}kills where unix_timestamp < :time order by unix_timestamp desc limit 1",
-                                      array(":time" => $prevMonthTime), 3600);
-            $this->context['nextMonth'] = $nextMonth;
-            $this->context['prevMonth'] = $prevMonth;
+
+            $previousMonth = $month - 1;
+            $previousYear = $year;
+            if ($month < 1) {
+                $previousMonth = 12;
+                $previousYear--;
+            }
+            $this->context['prevMonth'] = array("year" => $previousYear, "month" => $previousMonth);
+
         } else {
             $today = mktime(0, 0, 0, $month, $day, $year, 0);
-            $prevDay = Db::queryRow("select year, month, day from {$dbPrefix}kills where unix_timestamp < :time order by unix_timestamp desc limit 1",
+            $prevDay = Db::queryRow("select year, month, day from {$dbPrefix}kills_{$year}_{$month} where unix_timestamp < :time order by unix_timestamp desc limit 1",
                                     array(":time" => $today), 3600);
-            $nextDay = Db::queryRow("select year, month, day from {$dbPrefix}kills where unix_timestamp >= :time order by unix_timestamp limit 1",
+            $nextDay = Db::queryRow("select year, month, day from {$dbPrefix}kills_{$year}_{$month} where unix_timestamp >= :time order by unix_timestamp limit 1",
                                     array(":time" => $today + 86400), 3600);
             if ($prevDay) $this->context['prevDay'] = $prevDay;
             if ($nextDay) $this->context['nextDay'] = $nextDay;
