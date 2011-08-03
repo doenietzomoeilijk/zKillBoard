@@ -181,7 +181,7 @@ function doPopulateCharactersTable($user_id = null)
     // 15 minutes per hour, 24 hours, mean 96 checks, how many keys per 96 checks to validate all within a 24 hours period?
     $limit = intval($apiTableCount / 96) + 1;
 
-    if ($user_id == null) $apiKeys = Db::query("select * from {$dbPrefix}api where error_code != 203 order by lastValidation limit $limit", array(), 0);
+    if ($user_id == null) $apiKeys = Db::query("select * from {$dbPrefix}api where error_code != 203 and lastValidation < date_sub(now(), interval 1 day) order by lastValidation limit $limit", array(), 0);
     else $apiKeys = Db::query("select * from {$dbPrefix}api where user_id = :user_id", array(":user_id" => $user_id));
 
     foreach ($apiKeys as $apiKey) {
@@ -197,8 +197,10 @@ function doPopulateCharactersTable($user_id = null)
         } catch (Exception $ex) {
             handleApiException($user_id, null, $ex);
             $numErrrors++;
+            Db::execute("update {$dbPrefix}api set error_count = error_count + 1 where user_id = :user_id", array(":user_id" => $user_id));
             continue;
         }
+        Db::execute("update {$dbPrefix}api set error_count = 0 where user_id = :user_id", array(":user_id" => $user_id));
         $apiCount++;
         // Clear the error code
         $characterIDs = array();
@@ -238,6 +240,10 @@ function doPopulateCharactersTable($user_id = null)
     //if (!$specificUserID) Log::irc("$apiCount keys revalidated: $directorCount Corp CEO/Directors, $characterCount Characters, and $numErrrors invalid keys.");
     if ($specificUserID) Log::irc("Specific user_id brought in " . pluralize($directorCount, "Corp CEO/Director")
                                   . " and " . pluralize($characterCount, "Character"));
+
+    // Do some cleanup
+    Db::execute("delete from {$dbPrefix}api where error_code = 203 or error_count > 30");
+    Db::execute("update {$dbPrefix}api set error_count = 0 where error_code = 0");
 }
 
 function doPullCharKills()
